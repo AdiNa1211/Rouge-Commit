@@ -129,15 +129,15 @@ export function createHud(app) {
           h('h3', {}, mole ? 'Cover tickets (fake)' : 'Your tickets'), (el.count = h('span', { class: 'count' })), h('i', { class: 'chev' }))),
         (el.tasks = h('ul', { class: 'tasks' })),
         partner ? h('p', { class: 'partner' }, 'Fellow mole: ', chip(partner)) : null))),
-    h('div', { class: 'hud-tc' },
-      h('div', { class: 'bars' },
+    (el.tc = h('div', { class: 'hud-tc' },
+      (el.bars = h('div', { class: 'bars' },
         h('label', {}, 'Tickets shipped', (el.taskN = h('b', {}))), h('div', { class: 'bar' }, (el.taskBar = h('i'))),
-        h('label', {}, 'Data leaked', (el.leakN = h('b', {}))), h('div', { class: 'bar leak' }, (el.leakBar = h('i')))),
+        h('label', {}, 'Data leaked', (el.leakN = h('b', {}))), h('div', { class: 'bar leak' }, (el.leakBar = h('i'))))),
       (el.objective = h('div', { class: 'objective' })),
-      (el.alarm = h('div', { class: 'alarm', style: { display: 'none' } }))),
-    h('div', { class: 'hud-tr' }, (el.map = h('canvas', { id: 'minimap', title: 'Press M or tap to enlarge', onclick: () => { bigMap = !bigMap; } })), (el.where = h('div', { class: 'where' })),
+      (el.alarm = h('div', { class: 'alarm', style: { display: 'none' } })))),
+    (el.tr = h('div', { class: 'hud-tr' }, (el.map = h('canvas', { id: 'minimap', title: 'Press M or tap to enlarge', onclick: () => { bigMap = !bigMap; } })), (el.where = h('div', { class: 'where' })),
       h('div', { class: 'legend' }, h('span', {}, h('i', { class: 'dot', style: { background: mole ? MARK.cover : MARK.task } }), mole ? 'Cover tickets' : 'Your tickets'),
-        h('span', {}, h('i', { class: 'dot', style: { background: MARK.fix } }), 'Incident'))),
+        h('span', {}, h('i', { class: 'dot', style: { background: MARK.fix } }), 'Incident')))),
     h('div', { class: 'hud-bl' }, (el.feed = h('div', { class: 'feed' })),
       (el.say = h('input', { id: 'say', class: 'say', placeholder: 'Say something to people nearby, then Enter', maxlength: '80', style: { display: 'none' } }))),
     (el.prompt = h('div', { class: 'hud-bc' })),
@@ -147,7 +147,12 @@ export function createHud(app) {
   // ticket list folds to one line; remembered per browser, folded by default on phones
   const touch = isTouch();
   let stick = null;
-  if (touch) { stick = createStick(root); root.append(createTouchBar(app)); }
+  if (touch) {
+    stick = createStick(root); root.append(createTouchBar(app));
+    // phones: round radar sits beside the progress bars instead of in its own corner
+    el.tc.prepend(h('div', { class: 'top-row' }, el.bars, h('div', { class: 'radar' }, el.map, el.where)));
+    el.tr.remove();
+  }
   function setCollapsed(v) {
     el.card.classList.toggle('collapsed', v);
     el.cardHead.setAttribute('aria-expanded', String(!v));
@@ -165,14 +170,19 @@ export function createHud(app) {
   });
 
   let taskSig = '', bigMap = false;
+  const RADAR = 88;
   const mapCtx = el.map.getContext('2d');
 
   function drawMap(t) {
-    const k = bigMap ? 10 : 3.6, map = g.map;
-    const W = Math.round(map.width * k), H = Math.round(map.depth * k);
-    if (el.map.width !== W) { el.map.width = W; el.map.height = H; el.map.classList.toggle('big', bigMap); }
+    const radar = touch && !bigMap, map = g.map;
+    const k = bigMap ? 10 : radar ? 4 : 3.6;
+    const W = radar ? RADAR : Math.round(map.width * k), H = radar ? RADAR : Math.round(map.depth * k);
+    if (el.map.width !== W || el.map.height !== H) { el.map.width = W; el.map.height = H; el.map.classList.toggle('big', bigMap); }
     const c = mapCtx;
     c.clearRect(0, 0, W, H);
+    c.save();
+    // radar keeps the player in the middle of a circle; the full map stays a plain rectangle
+    if (radar) { c.beginPath(); c.arc(W / 2, H / 2, W / 2, 0, 7); c.clip(); c.fillStyle = '#0f1424'; c.fill(); c.translate(W / 2 - me.pos.x * k, H / 2 - me.pos.z * k); }
     for (const r of map.rooms) {
       c.globalAlpha = r.id === me.room || (r.id === 'devfloor' && ['backend', 'frontend'].includes(me.room)) ? 0.95 : 0.55;
       c.fillStyle = r.floor;
@@ -211,6 +221,7 @@ export function createHud(app) {
     c.fillStyle = '#fff'; c.strokeStyle = '#0f1424'; c.lineWidth = 1.5;
     c.beginPath(); c.moveTo(0, s); c.lineTo(s * 0.7, -s * 0.7); c.lineTo(0, -s * 0.3); c.lineTo(-s * 0.7, -s * 0.7); c.closePath();
     c.fill(); c.stroke();
+    c.restore();
     c.restore();
   }
 

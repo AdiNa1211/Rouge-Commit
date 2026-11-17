@@ -12,9 +12,16 @@ import { Net } from './net/client.js';
 import { sfx, toggleMute, isMuted } from './ui/audio.js';
 import { h } from './ui/dom.js';
 import { AUDIO } from './data/config.js';
-import { isTouch } from './ui/touch.js';
+import { isTouch, lockLandscape } from './ui/touch.js';
 
-if (isTouch()) document.body.classList.add('touch');
+// phones play landscape only: lock where possible, otherwise pause behind a rotate screen
+const touchDevice = isTouch();
+const upright = matchMedia('(orientation: portrait)');
+if (touchDevice) {
+  document.body.classList.add('touch');
+  document.body.append(h('div', { class: 'rotate-hint' }, h('i'), h('b', {}, 'Turn your phone sideways'), h('span', {}, 'Rogue Commit plays in landscape.')));
+  window.addEventListener('pointerdown', () => { if (!document.fullscreenElement || upright.matches) lockLandscape(); });
+}
 
 const ui = document.getElementById('ui');
 const uiRng = new Rng(Date.now());
@@ -278,7 +285,7 @@ function frame(now) {
     app.view.update(dt);
   } else {
     const me = g.human;
-    if (!app.paused || app.remote) {
+    if ((!app.paused && !(touchDevice && upright.matches)) || app.remote) {
       const free = g.phase === 'play' && !app.modal && !minigameOpen();
       const st = app.hud.stick;
       if (st && !free) st.reset();

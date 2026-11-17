@@ -1,6 +1,14 @@
 // On-screen controls for phones and tablets: a thumbstick plus a few extra buttons.
 import { h } from './dom.js';
 
+// fullscreen + orientation lock only work from a tap, and only where the browser allows it (not iPhone Safari)
+export async function lockLandscape() {
+  try {
+    if (!document.fullscreenElement) await document.documentElement.requestFullscreen?.({ navigationUI: 'hide' });
+    await screen.orientation?.lock?.('landscape');
+  } catch { /* unsupported: the rotate screen covers portrait instead */ }
+}
+
 export const isTouch = () => matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0 && !matchMedia('(pointer: fine)').matches;
 
 // returns { x, y, run } where y is forward; pushed past 85% of the ring means run
