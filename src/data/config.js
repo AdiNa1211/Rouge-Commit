@@ -29,6 +29,9 @@ export const SETTINGS = {
   meeting: { discussion: 30, voting: 25, results: 7 },
 };
 
+// footstep squeaks: metres walked per step, and how often a step turns into a honk
+export const AUDIO = { stepStride: 1.5, runStride: 2.1, honkChance: 0.04 };
+
 export const ROLES = {
   staff: { id: 'staff', name: 'Staff', blurb: 'Close your tickets. Find the two moles.' },
   mole: { id: 'mole', name: 'Mole', blurb: 'Blend in. Break production. Leak the data.' },
@@ -78,6 +81,16 @@ export const SABOTAGES = {
   },
 };
 
+// one is drawn per match for variety; settings override SETTINGS for that match only
+export const MATCH_DAYS = [
+  { id: 'regular', name: 'A regular Tuesday', blurb: 'Nothing special on the calendar. Suspiciously quiet.', settings: {} },
+  { id: 'release', name: 'Release day', blurb: 'Fewer tickets each, but the moles strike and sabotage faster.', settings: { tasksPerStaff: 5, sabotageCooldown: 36, sabotageCooldownStart: 20, killCooldown: 36 } },
+  { id: 'lateShift', name: 'Late shift', blurb: 'Visibility is down across the floor. You see less, and so do they.', settings: { visionRange: 10, killCooldown: 46 } },
+  { id: 'audit', name: 'Audit week', blurb: 'Security is twitchy: data theft is flagged faster and badges rarely miss.', settings: { stealAlertDelay: [3, 6], badgeMissChance: 0.08 } },
+  { id: 'hackathon', name: 'Hackathon', blurb: 'Everyone sprints between desks. More tickets, more pace.', settings: { tasksPerStaff: 7, walkSpeed: 5.6, runSpeed: 8.6, aiSpeed: 3.7 } },
+  { id: 'coffee', name: 'Espresso machine upgrade', blurb: 'Free double shots all day. Meetings are short and lively.', settings: { aiSpeed: 3.6, meeting: { discussion: 24, voting: 22, results: 6 } } },
+];
+
 // evaluated in order after every state change; first match ends the match
 export const WIN_CONDITIONS = [
   { id: 'molesOut', side: 'staff', text: 'Both moles were walked out of the building.',
@@ -87,7 +100,7 @@ export const WIN_CONDITIONS = [
   { id: 'parity', side: 'mole', text: 'The moles now outnumber the people who could stop them.',
     test: g => g.living('mole').length >= g.living('staff').length },
   { id: 'exfil', side: 'mole', text: 'The whole customer database walked out the door.',
-    test: g => g.exfil >= SETTINGS.exfilWin },
+    test: g => g.exfil >= g.S.exfilWin },
   { id: 'meltdown', side: 'mole', text: 'Production stayed down too long. The company folded.',
     test: g => g.sabotage && g.sabotage.def.critical && g.sabotage.timeLeft <= 0 },
 ];

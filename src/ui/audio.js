@@ -15,7 +15,16 @@ function tone(freq, t0, dur, type = 'sine', vol = 0.12, slide = 0) {
   o.stop(ctx.currentTime + t0 + dur + 0.05);
 }
 
+// rubber-sneaker squeak; left and right feet differ in pitch, running squeaks higher and shorter
+function squeak(foot, run, honk) {
+  if (honk) { tone(330, 0, 0.12, 'square', 0.05, 90); tone(250, 0.1, 0.16, 'square', 0.05, -60); return; }
+  const base = (foot ? 760 : 620) * (run ? 1.25 : 1) * (0.94 + Math.random() * 0.12);
+  tone(base, 0, run ? 0.06 : 0.08, 'sine', 0.045, base * 0.7);
+  tone(110, 0, 0.05, 'triangle', 0.04);
+}
+
 const SOUNDS = {
+  step: squeak,
   click: () => tone(620, 0, 0.05, 'triangle', 0.06),
   good: () => { tone(660, 0, 0.1, 'triangle'); tone(990, 0.09, 0.16, 'triangle'); },
   bad: () => tone(160, 0, 0.16, 'sawtooth', 0.08, -60),
@@ -32,12 +41,12 @@ const SOUNDS = {
   lose: () => [392, 330, 262, 196].forEach((f, i) => tone(f, i * 0.18, 0.4, 'sawtooth', 0.07)),
 };
 
-export function sfx(name) {
+export function sfx(name, ...args) {
   if (muted) return;
   try {
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
-    SOUNDS[name]?.();
+    SOUNDS[name]?.(...args);
   } catch { /* audio is optional */ }
 }
 export const toggleMute = () => (muted = !muted);

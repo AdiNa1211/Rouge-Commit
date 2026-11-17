@@ -3,6 +3,9 @@
 import { h, clear } from './dom.js';
 
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(x => x[1]);
+// `backticks` in explanations render as inline code
+const rich = text => h('p', {}, text.split('`').map((part, i) => (i % 2 ? h('code', {}, part) : part)));
+const learnCard = (label, text) => h('div', { class: 'mg-learn' }, h('b', {}, label), rich(text));
 
 const GAMES = {
   findLine(body, p, win, miss) {
@@ -122,11 +125,18 @@ const GAMES = {
       const prompt = round.code
         ? h('div', { class: 'mg-prompt mono', html: round.prompt.replace(/[<&]/g, c => (c === '<' ? '&lt;' : '&amp;')).replace('___', '<b class="blank">?</b>') })
         : h('div', { class: 'mg-prompt' }, round.prompt);
-      clear(body).append(p.rounds.length > 1 ? h('div', { class: 'mg-step' }, `Query ${r + 1} of ${p.rounds.length}`) : null, prompt,
-        h('div', { class: 'mg-pool' }, round.options.map(o => h('button', { class: 'mg-chip mono', onclick: e => {
-          if (o !== round.answer) return miss(e.currentTarget);
-          if (++r === p.rounds.length) win(); else draw();
-        } }, o))));
+      const next = () => (++r === p.rounds.length ? win() : draw());
+      const pool = h('div', { class: 'mg-pool' }, round.options.map(o => h('button', { class: `mg-chip${round.code ? ' mono' : ''}`, onclick: e => {
+        if (o !== round.answer) return miss(e.currentTarget);
+        if (!round.explain) return next();
+        e.currentTarget.classList.add('ok');
+        pool.querySelectorAll('button').forEach(b => { b.disabled = true; });
+        const last = r === p.rounds.length - 1;
+        const go = h('button', { class: 'btn primary', onclick: next }, last ? 'Ship it' : 'Next question');
+        body.append(learnCard('Correct', round.explain), go);
+        go.focus();
+      } }, o)));
+      clear(body).append(p.rounds.length > 1 ? h('div', { class: 'mg-step' }, `${round.explain ? 'Question' : 'Query'} ${r + 1} of ${p.rounds.length}`) : null, prompt, pool);
     };
     draw();
   },
@@ -173,12 +183,21 @@ export function openMinigame(type, params, { onDone, onCancel, fake, sfx } = {})
       fake ? h('p', { class: 'fake-tag' }, 'Cover work. It looks real to anyone watching, but the ticket counter will not move.') : null,
       body));
   let finished = false;
+  const finish = () => { if (current?.root === root) { closeMinigame(true); onDone?.(); } };
+  // tickets with a lesson show it before closing; Esc or the button both ship the ticket
+  const teach = () => {
+    if (current?.root !== root) return;
+    current.cleanup?.(); current.cleanup = null; current.onCancel = onDone;
+    const go = h('button', { class: 'btn primary', onclick: finish }, 'Ship it');
+    clear(body).append(learnCard('Why it matters', params.learn), go);
+    go.focus();
+  };
   const win = () => {
     if (finished) return;
     finished = true;
     sfx?.('good');
     root.querySelector('.panel').classList.add('won');
-    setTimeout(() => { if (current?.root === root) { closeMinigame(true); onDone?.(); } }, 550);
+    setTimeout(params.learn ? teach : finish, 550);
   };
   const miss = el => {
     sfx?.('bad');

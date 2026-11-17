@@ -1,7 +1,7 @@
 // Authoritative match simulation. No rendering, no DOM: input arrives as commands,
 // output leaves as events on the bus. A network layer can sit on exactly that seam.
 import { Bus, Rng, dist } from '../core/util.js';
-import { SETTINGS, CHARACTERS, SABOTAGES, WIN_CONDITIONS } from '../data/config.js';
+import { SETTINGS, CHARACTERS, SABOTAGES, WIN_CONDITIONS, MATCH_DAYS } from '../data/config.js';
 import { MAP, roomAt, roomById } from '../data/map.js';
 import { TASKS } from '../data/tasks.js';
 import { Nav } from './nav.js';
@@ -11,11 +11,12 @@ import { Meeting } from './meeting.js';
 let navCache = null;
 
 export class Game {
-  constructor({ seed = (Math.random() * 2 ** 31) | 0, humanId = null, humans = null, humanRole = 'random', map = MAP, settings = SETTINGS } = {}) {
-    this.S = settings;
+  constructor({ seed = (Math.random() * 2 ** 31) | 0, humanId = null, humans = null, humanRole = 'random', map = MAP, settings = SETTINGS, day = null } = {}) {
     this.map = map;
     this.nav = navCache && navCache.map === map ? navCache : (navCache = new Nav(map));
     this.rng = new Rng(seed);
+    this.day = MATCH_DAYS.find(d => d.id === day) || this.rng.pick(MATCH_DAYS);
+    this.S = settings = { ...settings, ...this.day.settings };
     this.bus = new Bus();
     this.time = 0;
     this.phase = 'play';
@@ -87,6 +88,8 @@ export class Game {
     this.camJam = Math.max(0, this.camJam - dt);
     for (const a of this.agents) for (const k in a.cd) a.cd[k] = Math.max(0, a.cd[k] - dt);
     this.moveHuman(dt);
+    // a dead human ghost who disconnects is handed to the AI, which never does ghost tickets
+    for (const a of this.agents) if (!a.alive && !a.isHuman && a.role === 'staff' && !a.tasksDropped) this.dropTasks(a);
     updateAI(this, dt);
     if (this.phase !== 'play') return;
     this.tickActivities(dt);
@@ -340,8 +343,10 @@ export class Game {
     },
   };
 
+  // killed humans keep working as ghosts; ejected humans and AI-controlled dead cannot, so their tickets leave the total
   dropTasks(a) {
-    if (a.role !== 'staff' || a.isHuman) return;
+    if (a.role !== 'staff' || a.tasksDropped || (a.isHuman && !a.ejected)) return;
+    a.tasksDropped = true;
     this.taskTotal -= a.tasks.filter(t => !t.done).length;
   }
 

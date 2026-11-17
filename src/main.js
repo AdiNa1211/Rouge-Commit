@@ -11,6 +11,7 @@ import { showMenu, showReveal, showPause, showEnd, showLobby } from './ui/screen
 import { Net } from './net/client.js';
 import { sfx, toggleMute, isMuted } from './ui/audio.js';
 import { h } from './ui/dom.js';
+import { AUDIO } from './data/config.js';
 
 const ui = document.getElementById('ui');
 const uiRng = new Rng(Date.now());
@@ -247,6 +248,18 @@ window.addEventListener('keyup', e => keys.delete(e.code));
 window.addEventListener('blur', () => keys.clear());
 
 let last = performance.now(), clock = 0, camT = 0;
+const stride = { acc: 0, foot: 0, x: null, z: null };
+
+// squeak every stride of real movement; ghosts float silently and teleports (meeting seats) are skipped
+function footsteps(g, me) {
+  const d = stride.x == null ? 0 : Math.hypot(me.pos.x - stride.x, me.pos.z - stride.z);
+  stride.x = me.pos.x; stride.z = me.pos.z;
+  if (g.phase !== 'play' || !me.alive || d > 2) { stride.acc = 0; return; }
+  stride.acc += d;
+  if (stride.acc < (me.move.run ? AUDIO.runStride : AUDIO.stepStride)) return;
+  stride.acc = 0; stride.foot ^= 1;
+  sfx('step', stride.foot, me.move.run, uiRng.chance(AUDIO.honkChance));
+}
 function frame(now) {
   // slow frames are split into fixed sim steps so game time never falls behind the clock
   const dt = Math.min(0.25, (now - last) / 1000);
@@ -268,6 +281,7 @@ function frame(now) {
       app.cmd({ type: 'move', x: b.fx * f + b.rx * r, z: b.fz * f + b.rz * r, run: keys.has('ShiftLeft') || keys.has('ShiftRight') });
       if (app.remote) app.net.frame(dt); else for (let i = 0; i < steps; i++) g.update(step);
     }
+    footsteps(g, me);
     if (minigameOpen() && !me.activity) closeMinigame(true);
     const lost = g.camJam > 0 || g.terminalsDown();
     if (app.feed && !lost && (camT -= dt) <= 0) {

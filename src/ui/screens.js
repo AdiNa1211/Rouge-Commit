@@ -53,6 +53,7 @@ export function showReveal(app, done) {
     h('p', { class: 'eyebrow' }, `${me.def.full} · ${me.def.job}`),
     h('h1', {}, mole ? 'You are a mole' : 'You are staff'),
     h('p', { class: 'lede' }, mole ? `${partner.def.full} is the other mole. Nobody else knows.` : `${SETTINGS.moleCount} of your ${g.agents.length - 1} colleagues are moles. ${ROLES.staff.blurb}`),
+    g.day ? h('p', { class: 'day-tag' }, h('b', {}, `Today: ${g.day.name}. `), g.day.blurb) : null,
     h('p', { class: 'muted' }, 'Click to start'));
   document.getElementById('ui').append(root);
   setTimeout(close, 5200);
@@ -75,7 +76,7 @@ export function showEnd(app) {
     h('p', { class: 'eyebrow' }, r.side === 'staff' ? 'Staff win' : 'Moles win'),
     h('h1', {}, won ? 'Victory' : 'Defeat'),
     h('p', { class: 'lede' }, r.text),
-    h('p', { class: 'muted' }, `${fmtTime(g.time)} on the clock · ${g.taskDone} of ${g.taskTotal} tickets shipped · ${Math.floor(g.exfil)}% of the data leaked`),
+    h('p', { class: 'muted' }, `${g.day ? `${g.day.name} · ` : ''}${fmtTime(g.time)} on the clock · ${g.taskDone} of ${g.taskTotal} tickets shipped · ${Math.floor(g.exfil)}% of the data leaked`),
     h('div', { class: 'cast' }, g.agents.map(a => h('div', { class: `cast-card ${a.role}${a.alive ? '' : ' gone'}` },
       h('i', { class: 'avatar', style: { background: a.def.color } }, a.def.name[0]),
       h('div', {}, h('b', {}, a.def.name + (a === me ? ' (you)' : '')), h('span', {}, a.role === 'mole' ? 'Mole' : a.def.job)),

@@ -1,6 +1,6 @@
 // Wire format shared by the game server and the browser client.
 // Server side: snapshot / startInfo / encodeEvent. Client side: applyStart / applySnapshot / applyEvent.
-import { SABOTAGES } from '../data/config.js';
+import { SABOTAGES, SETTINGS, MATCH_DAYS } from '../data/config.js';
 import { roomAt } from '../data/map.js';
 
 const r2 = v => Math.round(v * 100) / 100;
@@ -25,7 +25,7 @@ export function snapshot(g, me, slow) {
 }
 
 export function startInfo(g, me) {
-  return { you: me.id, role: me.role, moles: me.role === 'mole' ? g.agents.filter(a => a.role === 'mole').map(a => a.id) : [], tasks: me.tasks };
+  return { you: me.id, role: me.role, moles: me.role === 'mole' ? g.agents.filter(a => a.role === 'mole').map(a => a.id) : [], tasks: me.tasks, day: g.day.id };
 }
 
 // returns the payload this player should receive for a sim event, or undefined to send nothing
@@ -52,6 +52,8 @@ export function encodeEvent(type, p, g, me) {
 
 // ---- client side: keep a local mirror of the match in the same shape the UI already reads ----
 export function applyStart(g, info) {
+  g.day = MATCH_DAYS.find(d => d.id === info.day) || g.day;
+  g.S = { ...SETTINGS, ...g.day.settings };
   for (const a of g.agents) a.role = info.moles.includes(a.id) ? 'mole' : 'staff';
   const me = g.agent(info.you);
   me.role = info.role;
