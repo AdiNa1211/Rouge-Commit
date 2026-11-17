@@ -4,8 +4,10 @@ import { CHARACTERS, ROLES, SETTINGS } from '../data/config.js';
 import { fmtTime } from '../core/util.js';
 
 const CONTROLS = [['W A S D', 'Move'], ['Shift', 'Run'], ['Drag', 'Turn camera'], ['Scroll', 'Zoom'], ['E', 'Use'], ['R', 'Report'],
-  ['C', 'Page stand-up'], ['N', 'Notebook'], ['M', 'Map'], ['T', 'Talk nearby'], ['Esc', 'Pause']];
-const controls = () => h('ul', { class: 'keys' }, CONTROLS.map(([k, v]) => h('li', {}, h('kbd', {}, k), v)));
+  ['C', 'Page stand-up'], ['N', 'Notebook'], ['M', 'Map'], ['L', 'Fold tickets'], ['T', 'Talk nearby'], ['Esc', 'Pause']];
+const TOUCH = [['Left thumb', 'Move'], ['Push to the edge', 'Run'], ['Drag the view', 'Turn camera'], ['Pinch', 'Zoom'],
+  ['Buttons', 'Use, report, page'], ['Tap the map', 'Enlarge'], ['Tap tickets', 'Fold']];
+const controls = () => h('ul', { class: 'keys' }, (document.body.classList.contains('touch') ? TOUCH : CONTROLS).map(([k, v]) => h('li', {}, h('kbd', {}, k), v)));
 
 export function showMenu(app) {
   const pick = app.pick;
@@ -54,7 +56,7 @@ export function showReveal(app, done) {
     h('h1', {}, mole ? 'You are a mole' : 'You are staff'),
     h('p', { class: 'lede' }, mole ? `${partner.def.full} is the other mole. Nobody else knows.` : `${SETTINGS.moleCount} of your ${g.agents.length - 1} colleagues are moles. ${ROLES.staff.blurb}`),
     g.day ? h('p', { class: 'day-tag' }, h('b', {}, `Today: ${g.day.name}. `), g.day.blurb) : null,
-    h('p', { class: 'muted' }, 'Click to start'));
+    h('p', { class: 'muted' }, document.body.classList.contains('touch') ? 'Tap to start' : 'Click to start'));
   document.getElementById('ui').append(root);
   setTimeout(close, 5200);
 }

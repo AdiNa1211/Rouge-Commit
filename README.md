@@ -32,6 +32,10 @@ WASD move · Shift run · drag to turn the camera · scroll to zoom · E use · 
 C page a stand-up · N notebook · M map · T talk nearby · Esc pause.
 Moles also get Q eliminate · F steal data · X toolkit.
 
+On phones and tablets the game switches to touch controls automatically: a thumbstick (push to the edge to run),
+drag to turn the camera, pinch to zoom, on-screen action buttons, and Pause / Map / Talk buttons. Landscape works best.
+The ticket list folds to one line: tap its header, or press L on a keyboard.
+
 ## How the code is split
 
 | Folder | What lives there |

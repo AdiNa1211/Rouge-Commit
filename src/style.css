@@ -295,3 +295,63 @@ kbd { font: 600 12px var(--mono); background: #f3f5fb; color: #141a2e; border-ra
 .pick.taken em { color: var(--sky); }
 .pick:disabled { opacity: 0.75; }
 .net-warn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: var(--coral); color: #24090a; padding: 6px 14px; border-radius: 99px; font-weight: 600; }
+
+/* ---- foldable ticket list ---- */
+.card-head { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 8px; cursor: pointer; border-radius: 6px; }
+.card-head:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+.card-head h3 { margin: 0; flex: 1; }
+.card-head .count { font: 600 12px var(--mono); color: var(--amber); font-variant-numeric: tabular-nums; }
+.card-head .chev { width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); margin: -4px 2px 0 4px; transition: transform 0.15s; }
+.card .tasks { margin-top: 8px; }
+.card.collapsed .tasks, .card.collapsed .partner { display: none; }
+.card.collapsed .chev { transform: rotate(-45deg); margin-top: 0; }
+
+/* ---- touch controls ---- */
+.stick, .touch-bar { display: none; }
+body.touch { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+body.touch input { -webkit-user-select: text; user-select: text; }
+body.touch button { touch-action: manipulation; }
+.touch .stick { display: block; position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); width: 132px; height: 132px; border-radius: 50%;
+  background: rgba(13, 17, 28, 0.45); border: 2px solid rgba(238, 241, 250, 0.28); touch-action: none; }
+.touch .stick.run { border-color: var(--amber); }
+.stick-knob { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; background: rgba(238, 241, 250, 0.85); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); pointer-events: none; }
+.stick.run .stick-knob { background: var(--amber); }
+.touch .touch-bar { display: flex; gap: 6px; position: absolute; right: max(8px, env(safe-area-inset-right)); top: 168px; }
+.tbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 7px 11px; font: 600 12px var(--display); letter-spacing: 0.04em; }
+.touch .act kbd { display: none; }
+.touch .act { min-width: 74px; min-height: 52px; padding: 7px 8px; }
+.touch .hud-bl { bottom: 168px; left: max(10px, env(safe-area-inset-left)); width: min(300px, 40vw); }
+.touch .hud-bc { bottom: auto; top: 46%; }
+.touch .hud-br { right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); max-width: 330px; gap: 6px; }
+.touch .hud-tl { left: max(8px, env(safe-area-inset-left)); top: 8px; width: 230px; gap: 6px; }
+.touch .hud-tr { right: max(8px, env(safe-area-inset-right)); top: 8px; padding: 6px; }
+.touch #minimap:not(.big) { width: 150px; height: auto; }
+.touch .legend { display: none; }
+.touch .idcard { padding: 7px 10px; }
+.touch .idcard .avatar { width: 30px; height: 30px; font-size: 15px; border-radius: 9px; }
+.touch .idcard span:not(.role) { display: none; }
+.touch .card { padding: 8px 10px; }
+.touch .tasks { max-height: 34vh; overflow: auto; }
+.touch .hud-tc { top: 8px; bottom: auto; width: min(300px, calc(100vw - 440px)); min-width: 220px; gap: 5px; }
+.touch .tip kbd { display: none; }
+.touch .bars { padding: 6px 10px; gap: 3px 10px; }
+.touch .objective { font-size: 12px; padding: 4px 12px; }
+.touch .banner b { font-size: 20px; }
+
+/* phone held upright: stack the top row so nothing overlaps */
+@media (orientation: portrait) {
+  .touch .hud-tc { left: 8px; right: 8px; width: auto; min-width: 0; transform: none; }
+  .touch .hud-tl, .touch .hud-tr { top: 152px; }
+  .touch .hud-tl { width: min(230px, calc(100vw - 190px)); }
+  .touch .touch-bar { top: 312px; }
+  .touch .hud-bl { width: calc(100vw - 20px); }
+}
+/* short landscape screens: tighter panels so minigames and meetings fit */
+@media (max-height: 520px) {
+  .panel { padding: 14px; gap: 10px; }
+  .overlay { padding: 8px; }
+  .menu-wrap { gap: 14px; }
+  .menu-intro .rules, .menu-intro .keys { display: none; }
+  h1 { font-size: clamp(36px, 8vh, 64px); }
+  .m-wrap { gap: 8px; }
+}

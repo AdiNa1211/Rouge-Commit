@@ -4,6 +4,7 @@ import { h, clear } from './dom.js';
 import { fmtTime } from '../core/util.js';
 import { SABOTAGES, ROLES } from '../data/config.js';
 import { MARK } from '../render/view.js';
+import { isTouch, createStick, createTouchBar } from './touch.js';
 
 export const chip = a => h('span', { class: 'who' }, h('i', { class: 'dot', style: { background: a.def.color } }), a.def.name);
 
@@ -123,15 +124,18 @@ export function createHud(app) {
       h('div', { class: 'idcard' }, h('i', { class: 'avatar', style: { background: me.def.color } }, me.def.name[0]),
         h('div', {}, h('b', {}, me.def.full), h('span', {}, me.def.job)),
         (el.role = h('span', { class: `role ${me.role}` }, ROLES[me.role].name))),
-      h('div', { class: 'card' }, h('h3', {}, mole ? 'Cover tickets (fake)' : 'Your tickets'), (el.tasks = h('ul', { class: 'tasks' })),
-        partner ? h('p', { class: 'partner' }, 'Fellow mole: ', chip(partner)) : null)),
+      (el.card = h('div', { class: 'card' },
+        (el.cardHead = h('button', { class: 'card-head', onclick: () => setCollapsed(!el.card.classList.contains('collapsed')) },
+          h('h3', {}, mole ? 'Cover tickets (fake)' : 'Your tickets'), (el.count = h('span', { class: 'count' })), h('i', { class: 'chev' }))),
+        (el.tasks = h('ul', { class: 'tasks' })),
+        partner ? h('p', { class: 'partner' }, 'Fellow mole: ', chip(partner)) : null))),
     h('div', { class: 'hud-tc' },
       h('div', { class: 'bars' },
         h('label', {}, 'Tickets shipped', (el.taskN = h('b', {}))), h('div', { class: 'bar' }, (el.taskBar = h('i'))),
         h('label', {}, 'Data leaked', (el.leakN = h('b', {}))), h('div', { class: 'bar leak' }, (el.leakBar = h('i')))),
       (el.objective = h('div', { class: 'objective' })),
       (el.alarm = h('div', { class: 'alarm', style: { display: 'none' } }))),
-    h('div', { class: 'hud-tr' }, (el.map = h('canvas', { id: 'minimap', title: 'Press M to enlarge' })), (el.where = h('div', { class: 'where' })),
+    h('div', { class: 'hud-tr' }, (el.map = h('canvas', { id: 'minimap', title: 'Press M or tap to enlarge', onclick: () => { bigMap = !bigMap; } })), (el.where = h('div', { class: 'where' })),
       h('div', { class: 'legend' }, h('span', {}, h('i', { class: 'dot', style: { background: mole ? MARK.cover : MARK.task } }), mole ? 'Cover tickets' : 'Your tickets'),
         h('span', {}, h('i', { class: 'dot', style: { background: MARK.fix } }), 'Incident'))),
     h('div', { class: 'hud-bl' }, (el.feed = h('div', { class: 'feed' })),
@@ -140,6 +144,20 @@ export function createHud(app) {
     h('div', { class: 'hud-br' }, [el.kill, el.steal, el.sab, el.report, el.pager, el.note, el.use].filter(Boolean)));
   document.getElementById('ui').append(root);
 
+  // ticket list folds to one line; remembered per browser, folded by default on phones
+  const touch = isTouch();
+  let stick = null;
+  if (touch) { stick = createStick(root); root.append(createTouchBar(app)); }
+  function setCollapsed(v) {
+    el.card.classList.toggle('collapsed', v);
+    el.cardHead.setAttribute('aria-expanded', String(!v));
+    try { localStorage.setItem('rogue-commit-tickets', v ? 'folded' : 'open'); } catch { /* optional */ }
+  }
+  let saved = null;
+  try { saved = localStorage.getItem('rogue-commit-tickets'); } catch { /* optional */ }
+  setCollapsed(saved ? saved === 'folded' : touch);
+
+  el.say.addEventListener('blur', () => { if (!el.say.value.trim()) el.say.style.display = 'none'; });
   el.say.addEventListener('keydown', e => {
     e.stopPropagation();
     if (e.key === 'Enter') { app.sayNearby(el.say.value); el.say.value = ''; el.say.style.display = 'none'; el.say.blur(); }
@@ -201,6 +219,7 @@ export function createHud(app) {
     const sig = me.tasks.map(t => +t.done).join('') + down;
     if (sig === taskSig) return;
     taskSig = sig;
+    el.count.textContent = `${me.tasks.filter(t => t.done).length}/${me.tasks.length}`;
     clear(el.tasks).append(...me.tasks.map(t => {
       const st = g.stations[t.station];
       return h('li', { class: t.done ? 'done' : down && st.workstation ? 'off' : '' }, h('i', { style: { borderColor: mole ? MARK.cover : MARK.task } }), h('span', {}, t.name), h('em', {}, g.roomName(st.room)));
@@ -217,10 +236,13 @@ export function createHud(app) {
 
   return {
     root,
+    stick,
+    toggleTickets: () => setCollapsed(!el.card.classList.contains('collapsed')),
     toast: (text, kind) => push(text, kind),
     bark: (a, text) => push(h('span', {}, chip(a), ` ${text}`), 'bark'),
     toggleMap: () => { bigMap = !bigMap; },
     openSay: () => { el.say.style.display = ''; el.say.focus(); },
+    closeSay: () => { el.say.style.display = 'none'; el.say.blur(); },
     destroy: () => root.remove(),
     update(dt, t) {
       const it = app.interact, s = g.sabotage, ghost = !me.alive;
