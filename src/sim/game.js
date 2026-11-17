@@ -336,6 +336,8 @@ export class Game {
 
     pager(a) {
       if (!a.alive || a.pager <= 0 || this.sabotage?.def.critical) return false;
+      const btn = this.stations.emergency;
+      if (btn && !this.near(a, btn, this.S.interactRange + 0.4)) return false;
       if (this.time - this.lastMeetingEnd < this.S.pagerLockout) return false;
       a.pager--;
       this.startMeeting({ kind: 'pager', by: a.id });

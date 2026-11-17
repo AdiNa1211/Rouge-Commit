@@ -208,7 +208,12 @@ function think(game, a) {
   if (a.role === 'staff') {
     if (a.pager > 0 && game.time - game.lastMeetingEnd > S.pagerLockout + 10) {
       const top = Math.max(...game.living().filter(o => o !== a).map(o => b.sus[o.id] || 0));
-      if (top >= b.per.pagerAt) game.command(a.id, { type: 'pager' });
+      // staff must walk to the emergency button, which gives a mole a chance to stop them
+      if (top >= b.per.pagerAt && b.goal?.kind !== 'page' && b.state !== 'work') {
+        const btn = game.stations.emergency;
+        if (!btn) game.command(a.id, { type: 'pager' });
+        else if (goTo(game, a, btn, { kind: 'page' })) b.hurry = true;
+      }
     }
     return;
   }
@@ -281,6 +286,8 @@ function arrive(game, a) {
   } else if (g.kind === 'email') {
     game.logLogin(a, g.station);
     b.wait = rng.range(2.5, 5);
+  } else if (g.kind === 'page') {
+    if (!game.command(a.id, { type: 'pager' })) b.wait = 0.5;
   } else if (g.kind === 'stalk') {
     b.wait = rng.range(0.4, 1.8);
   }

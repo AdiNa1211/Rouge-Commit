@@ -23,7 +23,7 @@ export const SETTINGS = {
   cameraJamCooldown: 50,
   forgeCooldown: 40,
   badgeMissChance: 0.2,
-  pagerCharges: 1,
+  pagerCharges: 1,           // emergency button presses per player per match; match days can raise it
   pagerLockout: 20,
   confirmEjects: true,
   meeting: { discussion: 30, voting: 25, results: 7 },
@@ -86,7 +86,7 @@ export const MATCH_DAYS = [
   { id: 'regular', name: 'A regular Tuesday', blurb: 'Nothing special on the calendar. Suspiciously quiet.', settings: {} },
   { id: 'release', name: 'Release day', blurb: 'Fewer tickets each, but the moles strike and sabotage faster.', settings: { tasksPerStaff: 5, sabotageCooldown: 36, sabotageCooldownStart: 20, killCooldown: 36 } },
   { id: 'lateShift', name: 'Late shift', blurb: 'Visibility is down across the floor. You see less, and so do they.', settings: { visionRange: 10, killCooldown: 46 } },
-  { id: 'audit', name: 'Audit week', blurb: 'Security is twitchy: data theft is flagged faster and badges rarely miss.', settings: { stealAlertDelay: [3, 6], badgeMissChance: 0.08 } },
+  { id: 'audit', name: 'Audit week', blurb: 'Security is twitchy: theft is flagged faster, badges rarely miss, and everyone gets two emergency presses.', settings: { stealAlertDelay: [3, 6], badgeMissChance: 0.08, pagerCharges: 2 } },
   { id: 'hackathon', name: 'Hackathon', blurb: 'Everyone sprints between desks. More tickets, more pace.', settings: { tasksPerStaff: 7, walkSpeed: 5.6, runSpeed: 8.6, aiSpeed: 3.7 } },
   { id: 'coffee', name: 'Espresso machine upgrade', blurb: 'Free double shots all day. Meetings are short and lively.', settings: { aiSpeed: 3.6, meeting: { discussion: 24, voting: 22, results: 6 } } },
 ];

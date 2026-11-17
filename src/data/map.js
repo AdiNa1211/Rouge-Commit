@@ -5,7 +5,7 @@ const PROP_SIZE = {
   desk: [1.6, 0.8], rack: [0.8, 1.0], kiosk: [0.8, 0.5], sofa: [2, 0.9], plant: [0.6, 0.6],
   fridge: [0.8, 0.8], shelf: [2, 0.6], car: [2, 4.2], stall: [1.2, 1.5], board: [2, 0.25],
   vending: [1, 0.8], pingpong: [2.7, 1.5], recep: [4, 1], table: [2, 1.2], counter: [3, 0.7],
-  screen: [3, 0.1],
+  screen: [3, 0.1], button: [0.9, 0.9],
 };
 const NON_SOLID = new Set(['screen']);
 
@@ -114,6 +114,8 @@ P('pingpong', 43.2, 31.5);
 P('vending', 46.1, 32.5, 3);
 // --- Cafeteria
 [[49.2, 24.6], [56, 24.6], [49.5, 31.6], [55.5, 31.6]].forEach(([x, z]) => P('table', x, z, 0, { stools: true }));
+// emergency button: the only place a stand-up can be paged from
+P('button', 52.5, 28, 0, { station: S('emergency', 'Emergency button') });
 // --- Kitchen
 P('counter', 63.15, 28, 3, { size: [6, 0.7] });
 P('fridge', 61, 22.4, 0, { station: S('fridge', 'Smart fridge'), smart: true });

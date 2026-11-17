@@ -1,10 +1,21 @@
 // In-match HUD: identity, tickets, progress, minimap, prompts, feed, and the
 // evidence tools (notebook, audit logs, camera wall, mole toolkit).
 import { h, clear } from './dom.js';
-import { fmtTime } from '../core/util.js';
+import { fmtTime, dist } from '../core/util.js';
 import { SABOTAGES, ROLES } from '../data/config.js';
 import { MARK } from '../render/view.js';
 import { isTouch, createStick, createTouchBar } from './touch.js';
+
+// why the emergency button can or cannot be pressed right now; reason is short enough for a button caption
+export function pagerStatus(g, me) {
+  const btn = g.stations.emergency, s = g.sabotage;
+  if (!me.alive) return { ok: false, why: 'out' };
+  if (me.pager <= 0) return { ok: false, why: 'used' };
+  if (s?.def.critical) return { ok: false, why: 'fix the outage first' };
+  if (g.time - g.lastMeetingEnd < g.S.pagerLockout) return { ok: false, why: 'not yet' };
+  if (btn && dist(me.pos, btn) > g.S.interactRange + 0.4) return { ok: false, why: `in the ${g.roomName(btn.room)}`, far: true };
+  return { ok: true, why: `${me.pager} left` };
+}
 
 export const chip = a => h('span', { class: 'who' }, h('i', { class: 'dot', style: { background: a.def.color } }), a.def.name);
 
@@ -113,7 +124,7 @@ export function createHud(app) {
   };
   el.use = btn('E', 'Use', () => app.act.use());
   el.report = btn('R', 'Report', () => app.act.report(), 'warn');
-  el.pager = btn('C', 'Page stand-up', () => app.act.pager());
+  el.pager = btn('C', 'Emergency', () => app.act.pager());
   el.note = btn('N', 'Notebook', () => app.act.notebook());
   el.kill = mole ? btn('Q', 'Eliminate', () => app.act.kill(), 'danger') : null;
   el.sab = mole ? btn('X', 'Toolkit', () => app.act.sabotage(), 'danger') : null;
@@ -137,7 +148,8 @@ export function createHud(app) {
       (el.alarm = h('div', { class: 'alarm', style: { display: 'none' } })))),
     (el.tr = h('div', { class: 'hud-tr' }, (el.map = h('canvas', { id: 'minimap', title: 'Press M or tap to enlarge', onclick: () => { bigMap = !bigMap; } })), (el.where = h('div', { class: 'where' })),
       h('div', { class: 'legend' }, h('span', {}, h('i', { class: 'dot', style: { background: mole ? MARK.cover : MARK.task } }), mole ? 'Cover tickets' : 'Your tickets'),
-        h('span', {}, h('i', { class: 'dot', style: { background: MARK.fix } }), 'Incident')))),
+        h('span', {}, h('i', { class: 'dot', style: { background: MARK.fix } }), 'Incident'),
+        h('span', {}, h('i', { class: 'dot', style: { background: '#ff3b30', boxShadow: '0 0 0 1.5px #fff' } }), 'Emergency')))),
     h('div', { class: 'hud-bl' }, (el.feed = h('div', { class: 'feed' })),
       (el.say = h('input', { id: 'say', class: 'say', placeholder: 'Say something to people nearby, then Enter', maxlength: '80', style: { display: 'none' } }))),
     (el.prompt = h('div', { class: 'hud-bc' })),
@@ -213,6 +225,9 @@ export function createHud(app) {
       c.fill(); c.stroke();
     };
     for (const id in app.markers) mark(g.stations[id], app.markers[id]);
+    // emergency button: always shown as a red dot with a white ring
+    const eb = g.stations.emergency;
+    if (eb) { c.fillStyle = '#ff3b30'; c.strokeStyle = '#fff'; c.lineWidth = bigMap ? 2.5 : 1.5; c.beginPath(); c.arc(eb.x * k, eb.z * k, bigMap ? 8 : 3.6, 0, 7); c.fill(); c.stroke(); }
     if (partner?.alive) { c.fillStyle = '#ff5d57'; c.beginPath(); c.arc(partner.pos.x * k, partner.pos.z * k, bigMap ? 5 : 2.6, 0, 7); c.fill(); }
     c.save();
     c.translate(me.pos.x * k, me.pos.z * k);
@@ -276,9 +291,10 @@ export function createHud(app) {
       el.use.disabled = !it.use || it.use.blocked;
       el.report.disabled = !it.report;
       el.report.classList.toggle('hot', !!it.report);
-      const canPage = me.alive && me.pager > 0 && !s?.def.critical && g.time - g.lastMeetingEnd >= g.S.pagerLockout;
-      el.pager.disabled = !canPage;
-      setText(el.pager._sub, me.pager > 0 ? (canPage ? `${me.pager} left` : s?.def.critical ? 'fix the outage first' : 'not yet') : 'used');
+      const page = pagerStatus(g, me);
+      el.pager.disabled = !page.ok;
+      el.pager.classList.toggle('hot', page.ok);
+      setText(el.pager._sub, page.why);
       if (mole) {
         el.kill.disabled = !it.kill || me.cd.kill > 0;
         setText(el.kill._sub, me.cd.kill > 0 ? `${Math.ceil(me.cd.kill)}s` : it.kill ? it.kill.def.name : 'get close');

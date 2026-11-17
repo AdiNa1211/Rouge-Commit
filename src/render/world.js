@@ -40,6 +40,13 @@ const BUILD = {
     for (let i = 0; i < 6; i++) g.add(box(0.56, 0.035, 0.012, fx.leds[i % 3], 0, 0.35 + i * 0.27, 0.506));
     g.add(box(0.62, 1.8, 0.01, mat('#2a3140'), 0, 1.0, 0.501));
   },
+  // pedestal with a red dome under a glass cover, a nod to the classic emergency button
+  button(g) {
+    g.add(cyl(0.42, 0.5, 0.9, mat('#3b4458'), 0, 0.45, 0), cyl(0.5, 0.5, 0.06, mat('#c7ccd6'), 0, 0.93, 0));
+    g.add(cyl(0.3, 0.3, 0.12, glow('#ff3b30', 1.4), 0, 1.02, 0));
+    const cover = new THREE.Mesh(new THREE.SphereGeometry(0.4, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat('#bfe6ff', { transparent: true, opacity: 0.28 }));
+    cover.position.y = 0.96; g.add(cover);
+  },
   kiosk(g) {
     g.add(box(0.55, 1.0, 0.3, mat('#3b4458'), 0, 0.5, -0.05));
     const s = box(0.72, 0.46, 0.05, mat('#1c2130'), 0, 1.2, 0.02);

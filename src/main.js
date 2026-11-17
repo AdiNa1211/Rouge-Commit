@@ -4,7 +4,7 @@ import { noteCameraSighting } from './sim/ai.js';
 import { View } from './render/view.js';
 import { TASKS, FIXES, taskById } from './data/tasks.js';
 import { Rng, dist } from './core/util.js';
-import { createHud, openNotebook, openLogs, openCams, openSabotage } from './ui/hud.js';
+import { createHud, openNotebook, openLogs, openCams, openSabotage, pagerStatus } from './ui/hud.js';
 import { createMeetingUI } from './ui/meetingui.js';
 import { openMinigame, closeMinigame, minigameOpen } from './ui/minigames.js';
 import { showMenu, showReveal, showPause, showEnd, showLobby } from './ui/screens.js';
@@ -226,7 +226,11 @@ function computeInteract() {
     const task = me.tasks.find(t => t.station === st.id && !t.done);
     const off = g.terminalsDown() && st.workstation;
     const offline = { label: 'Workstation offline until the network is back', blocked: true };
-    if (g.sabotage?.def.station === st.id && me.alive) it.use = { label: `Repair: ${g.sabotage.def.name}`, run: startFix };
+    if (st.id === 'emergency') {
+      const p = pagerStatus(g, me);
+      if (me.alive) it.use = p.ok ? { label: 'Call an emergency stand-up', run: () => app.act.pager() }
+        : { label: `Emergency button: ${p.why === 'used' ? 'you have used yours' : p.why}`, blocked: true };
+    } else if (g.sabotage?.def.station === st.id && me.alive) it.use = { label: `Repair: ${g.sabotage.def.name}`, run: startFix };
     else if (me.alive && st.id === 'cams') it.use = { label: 'Watch the security cameras', run: () => openCams(app) };
     else if (me.alive && st.id === 'logs') it.use = { label: 'Read the audit logs', run: () => openLogs(app) };
     else if (me.role === 'staff' && task) it.use = off ? offline : { label: task.name, run: () => startWork(st, task) };

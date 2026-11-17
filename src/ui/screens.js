@@ -4,7 +4,7 @@ import { CHARACTERS, ROLES, SETTINGS } from '../data/config.js';
 import { fmtTime } from '../core/util.js';
 
 const CONTROLS = [['W A S D', 'Move'], ['Shift', 'Run'], ['Drag', 'Turn camera'], ['Scroll', 'Zoom'], ['E', 'Use'], ['R', 'Report'],
-  ['C', 'Page stand-up'], ['N', 'Notebook'], ['M', 'Map'], ['L', 'Fold tickets'], ['T', 'Talk nearby'], ['Esc', 'Pause']];
+  ['C', 'Emergency button'], ['N', 'Notebook'], ['M', 'Map'], ['L', 'Fold tickets'], ['T', 'Talk nearby'], ['Esc', 'Pause']];
 const TOUCH = [['Left thumb', 'Move'], ['Push to the edge', 'Run'], ['Drag the view', 'Turn camera'], ['Pinch', 'Zoom'],
   ['Buttons', 'Use, report, page'], ['Tap the map', 'Enlarge'], ['Tap tickets', 'Fold']];
 const controls = () => h('ul', { class: 'keys' }, (document.body.classList.contains('touch') ? TOUCH : CONTROLS).map(([k, v]) => h('li', {}, h('kbd', {}, k), v)));

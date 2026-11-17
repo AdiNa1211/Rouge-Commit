@@ -44,7 +44,7 @@ defines what each player is sent (own role and tickets only; roles are revealed 
 ## Controls
 
 WASD move · Shift run · drag to turn the camera · scroll to zoom · E use · R report ·
-C page a stand-up · N notebook · M map · T talk nearby · Esc pause.
+C emergency button (stand at it in the Cafeteria) · N notebook · M map · T talk nearby · Esc pause.
 Moles also get Q eliminate · F steal data · X toolkit.
 
 On phones and tablets the game switches to touch controls automatically: a thumbstick (push to the edge to run),
