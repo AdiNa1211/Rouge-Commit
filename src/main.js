@@ -18,9 +18,11 @@ import { isTouch, lockLandscape } from './ui/touch.js';
 const touchDevice = isTouch();
 const upright = matchMedia('(orientation: portrait)');
 if (touchDevice) {
+  const canLock = !!(screen.orientation?.lock && document.documentElement.requestFullscreen);
   document.body.classList.add('touch');
-  document.body.append(h('div', { class: 'rotate-hint' }, h('i'), h('b', {}, 'Turn your phone sideways'), h('span', {}, 'Rogue Commit plays in landscape.')));
-  window.addEventListener('pointerdown', () => { if (!document.fullscreenElement || upright.matches) lockLandscape(); });
+  document.body.append(h('div', { class: 'rotate-hint' }, h('i'), h('b', {}, 'Turn your phone sideways'), h('span', {}, canLock ? 'Or tap anywhere to switch to landscape.' : 'Rogue Commit plays in landscape.')));
+  // a touch only counts as a user gesture once the finger lifts, so lock on pointerup, not pointerdown
+  window.addEventListener('pointerup', () => { if (!document.fullscreenElement || upright.matches) lockLandscape(); });
 }
 
 const ui = document.getElementById('ui');

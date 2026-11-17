@@ -37,12 +37,20 @@ export function createMeetingUI(app, m) {
     return card;
   }));
 
+  // phones show discussion and evidence as tabs in one column; the tab bar is hidden on desktop
+  const tab = (label, ev) => h('button', { class: `m-tab${ev ? '' : ' on'}`, onclick: e => {
+    mgrid.classList.toggle('ev', ev);
+    tabs.querySelectorAll('.m-tab').forEach(t => t.classList.toggle('on', t === e.currentTarget));
+  } }, label);
+  const tabs = h('div', { class: 'm-tabs' }, tab('Discussion', false), tab('Evidence', true));
+  const mgrid = h('div', { class: 'm-grid' },
+    h('div', { class: 'm-col room' }, h('h3', {}, 'In the room'), verdict, grid),
+    tabs,
+    h('div', { class: 'm-col chat' }, h('h3', {}, 'Discussion'), log, actions, input),
+    h('div', { class: 'm-col evid' }, h('h3', {}, 'Your evidence'), evidenceView(app)));
   const root = h('div', { class: 'overlay meeting' }, h('div', { class: 'm-wrap' },
     h('header', { class: 'm-head' }, h('div', {}, h('p', { class: 'eyebrow' }, ctx.body ? 'Incident report' : 'Emergency stand-up'), h('h2', {}, title)), phaseEl),
-    h('div', { class: 'm-grid' },
-      h('div', { class: 'm-col' }, h('h3', {}, 'In the room'), verdict, grid),
-      h('div', { class: 'm-col chat' }, h('h3', {}, 'Discussion'), log, actions, input),
-      h('div', { class: 'm-col' }, h('h3', {}, 'Your evidence'), evidenceView(app)))));
+    mgrid));
   document.getElementById('ui').append(root);
 
   function addLine(line) {
