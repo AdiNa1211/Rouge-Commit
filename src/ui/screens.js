@@ -89,6 +89,15 @@ export function showEnd(app) {
   return root;
 }
 
+// LAN wording only when served from this machine or a private address; a public host gets a plain link
+function lobbyLink(st) {
+  const host = location.hostname;
+  const loopback = /^(localhost|127\.)/.test(host);
+  const lan = loopback || /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host);
+  if (!lan) return h('li', {}, 'Share this link: ', h('b', {}, location.origin), ' and the code above.');
+  return h('li', {}, 'Friends on the same Wi-Fi open ', h('b', {}, loopback && st.lan ? st.lan : location.host), ' in their browser and join with the code above.');
+}
+
 // waiting room for an online match; unclaimed characters are played by the AI
 export function showLobby(app, st) {
   const who = Object.fromEntries(st.players.map(p => [p.char, p]));
@@ -104,7 +113,7 @@ export function showLobby(app, st) {
       h('div', { class: 'code' }, st.code),
       h('p', { class: 'lede' }, `${st.players.length} of 10 seats are human. The AI plays the rest.`),
       h('ul', { class: 'rules' },
-        h('li', {}, 'Friends on the same Wi-Fi open ', h('b', {}, /^(localhost|127\.)/.test(location.host) && st.lan ? st.lan : location.host), ' in their browser and join with the code above.'),
+        lobbyLink(st),
         h('li', {}, 'Roles are dealt at random when the host starts. Two of the ten are moles.'),
         h('li', {}, 'Anyone who disconnects mid-match is taken over by the AI.'))),
     h('section', { class: 'menu-pick panel' },
