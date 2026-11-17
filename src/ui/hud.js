@@ -149,8 +149,8 @@ export function createHud(app) {
   let stick = null;
   if (touch) {
     stick = createStick(root); root.append(createTouchBar(app));
-    // phones: round radar sits beside the progress bars instead of in its own corner
-    el.tc.prepend(h('div', { class: 'top-row' }, el.bars, h('div', { class: 'radar' }, el.map, el.where)));
+    // phones: tickets, progress bars and the round radar share one row; tap the radar for the full map
+    el.tc.prepend(h('div', { class: 'top-row' }, el.card, el.bars, h('div', { class: 'radar' }, el.map, el.where)));
     el.tr.remove();
   }
   function setCollapsed(v) {

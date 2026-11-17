@@ -44,11 +44,10 @@ export function createStick(root) {
   return out;
 }
 
-// small row of buttons for things a keyboard player reaches with Esc, M and T
+// small row of buttons for things a keyboard player reaches with Esc and T; the radar itself opens the map
 export function createTouchBar(app) {
   const btn = (label, fn) => h('button', { class: 'tbtn', onclick: e => { e.stopPropagation(); fn(); } }, label);
   return h('div', { class: 'touch-bar' },
-    btn('Pause', () => app.act.pause()),
-    btn('Map', () => app.hud.toggleMap()),
+    btn('Menu', () => app.act.pause()),
     btn('Talk', () => app.hud.openSay()));
 }
