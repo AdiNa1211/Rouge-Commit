@@ -14,7 +14,9 @@ export const isTouch = () => matchMedia('(pointer: coarse)').matches || navigato
 // returns { x, y, run } where y is forward; pushed past 85% of the ring means run
 export function createStick(root) {
   const knob = h('i', { class: 'stick-knob' });
-  const base = h('div', { class: 'stick', 'aria-label': 'Move' }, knob);
+  // arrows are decoration only; pointer events pass through to the stick
+  const arrows = ['up', 'right', 'down', 'left'].map(d => h('i', { class: `stick-arrow ${d}`, 'aria-hidden': 'true' }));
+  const base = h('div', { class: 'stick', 'aria-label': 'Move' }, arrows, knob);
   root.append(base);
   const out = { x: 0, y: 0, run: false };
   let id = null, cx = 0, cy = 0, R = 1;

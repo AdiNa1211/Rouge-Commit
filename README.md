@@ -3,6 +3,21 @@
 A 3D social-deduction game set in a software office. Ten colleagues, two of them moles.
 Single player with nine AI colleagues; Three.js, no other runtime dependencies.
 
+Play it at https://rogue-commit.onrender.com (free hosting: the first load after a quiet spell can take up to a minute).
+
+![The office mid-match: tickets on the left, progress at the top, minimap on the right](docs/screenshots/gameplay.jpg)
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![Main menu with the cast of ten colleagues](docs/screenshots/menu.jpg) | ![Role reveal showing today's match day](docs/screenshots/role-reveal.jpg) |
+| **Main menu.** Pick a colleague and a role, or let the game deal one. | **Role reveal.** Each match draws a day (here Hackathon) that tweaks the rules. |
+| ![A DevOps quiz ticket with its explanation](docs/screenshots/quiz-ticket.jpg) | ![Incident report: colleagues, discussion and evidence](docs/screenshots/incident-report.jpg) |
+| **Learning tickets.** Beginner backend, frontend and DevOps questions, each with a short explanation. | **Incident report.** Accuse, question or vouch, then vote someone out. |
+| ![Phone layout with thumbstick and round minimap](docs/screenshots/phone-hud.jpg) | ![Incident report on a phone](docs/screenshots/phone-incident-report.jpg) |
+| **On a phone.** Landscape only: thumbstick, round minimap, tickets and progress in one row. | **Incident report on a phone.** Colleague grid with discussion and evidence tabs. |
+
 ## Run it
 
 ```
