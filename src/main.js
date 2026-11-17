@@ -11,6 +11,9 @@ import { showMenu, showReveal, showPause, showEnd, showLobby } from './ui/screen
 import { Net } from './net/client.js';
 import { sfx, toggleMute, isMuted } from './ui/audio.js';
 import { h } from './ui/dom.js';
+import { isTouch } from './ui/touch.js';
+
+if (isTouch()) document.body.classList.add('touch');
 
 const ui = document.getElementById('ui');
 const uiRng = new Rng(Date.now());
@@ -103,6 +106,7 @@ const app = {
     steal() { const s = app.interact.steal; if (s) app.cmd({ type: 'steal', station: s.id }); },
     sabotage() { if (app.game.human.role === 'mole' && app.game.human.alive) openSabotage(app); },
     notebook() { openNotebook(app); },
+    pause() { if (!app.attract && app.game.phase === 'play' && !app.paused && !app.modal) showPause(app); },
   },
 
   sayNearby(text) {
@@ -239,6 +243,7 @@ window.addEventListener('keydown', e => {
   if (app.attract || app.paused || app.game.phase !== 'play' || minigameOpen()) return;
   if (app.modal) { if (e.code === 'KeyE' && app.modal.name === 'cams') app.closeModal(); return; }
   if (e.code === 'KeyM') return app.hud.toggleMap();
+  if (e.code === 'KeyL') return app.hud.toggleTickets();
   if (e.code === 'KeyT') { e.preventDefault(); return app.hud.openSay(); }
   if (KEYMAP[e.code] && !e.repeat) return app.act[KEYMAP[e.code]]();
   keys.add(e.code);
@@ -262,10 +267,13 @@ function frame(now) {
     const me = g.human;
     if (!app.paused || app.remote) {
       const free = g.phase === 'play' && !app.modal && !minigameOpen();
-      const f = free ? (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) : 0;
-      const r = free ? (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) : 0;
+      const st = app.hud.stick;
+      if (st && !free) st.reset();
+      let f = free ? (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) - (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) : 0;
+      let r = free ? (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) - (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) : 0;
+      if (st && free && (st.x || st.y)) { f = st.y; r = st.x; }
       const b = app.view.basis();
-      app.cmd({ type: 'move', x: b.fx * f + b.rx * r, z: b.fz * f + b.rz * r, run: keys.has('ShiftLeft') || keys.has('ShiftRight') });
+      app.cmd({ type: 'move', x: b.fx * f + b.rx * r, z: b.fz * f + b.rz * r, run: keys.has('ShiftLeft') || keys.has('ShiftRight') || !!(st && free && st.run) });
       if (app.remote) app.net.frame(dt); else for (let i = 0; i < steps; i++) g.update(step);
     }
     if (minigameOpen() && !me.activity) closeMinigame(true);

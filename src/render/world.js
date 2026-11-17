@@ -215,7 +215,8 @@ export function buildWorld(scene, map, nav) {
   const hemi = new THREE.HemisphereLight('#dfe8ff', '#4a4338', 1.05);
   const sun = new THREE.DirectionalLight('#fff1dc', 1.9);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
+  const sm = matchMedia('(pointer: coarse)').matches ? 1024 : 2048;
+  sun.shadow.mapSize.set(sm, sm);
   const sc = sun.shadow.camera;
   sc.left = -24; sc.right = 24; sc.top = 24; sc.bottom = -24; sc.near = 1; sc.far = 80;
   sun.shadow.bias = -0.0006;

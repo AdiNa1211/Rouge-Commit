@@ -11,7 +11,8 @@ export class View {
   constructor(canvas) {
     this.canvas = canvas;
     const r = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
-    this.ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    this.touch = matchMedia('(pointer: coarse)').matches;
+    this.ratio = Math.min(window.devicePixelRatio || 1, this.touch ? 1.25 : 1.5);
     r.setPixelRatio(this.ratio);
     this.slow = 0;
     r.shadowMap.enabled = true;
@@ -53,17 +54,31 @@ export class View {
     for (const c of [this.camera, this.feedCam]) { c.aspect = w / h; c.updateProjectionMatrix(); }
   }
 
+  // one finger or mouse drag turns the camera, two fingers pinch to zoom
   bindInput() {
-    const c = this.canvas;
-    let drag = null;
-    c.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY }; c.setPointerCapture(e.pointerId); });
-    c.addEventListener('pointermove', e => {
-      if (!drag || this.mode !== 'follow') return;
-      this.yaw -= (e.clientX - drag.x) * 0.006;
-      this.pitch = clamp(this.pitch + (e.clientY - drag.y) * 0.004, 0.5, 1.4);
-      drag = { x: e.clientX, y: e.clientY };
+    const c = this.canvas, pts = new Map();
+    let pinch = 0;
+    c.addEventListener('pointerdown', e => {
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      c.setPointerCapture(e.pointerId);
+      if (pts.size === 2) { const [p, q] = [...pts.values()]; pinch = Math.hypot(p.x - q.x, p.y - q.y); }
     });
-    const end = () => { drag = null; };
+    c.addEventListener('pointermove', e => {
+      const prev = pts.get(e.pointerId);
+      if (!prev) return;
+      const cur = { x: e.clientX, y: e.clientY };
+      pts.set(e.pointerId, cur);
+      if (this.mode !== 'follow') return;
+      if (pts.size >= 2) {
+        const [p, q] = [...pts.values()], d = Math.hypot(p.x - q.x, p.y - q.y);
+        if (pinch) this.dist = clamp(this.dist * (pinch / d), 6, 22);
+        pinch = d;
+        return;
+      }
+      this.yaw -= (cur.x - prev.x) * 0.006;
+      this.pitch = clamp(this.pitch + (cur.y - prev.y) * 0.004, 0.5, 1.4);
+    });
+    const end = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; };
     c.addEventListener('pointerup', end);
     c.addEventListener('pointercancel', end);
     c.addEventListener('contextmenu', e => e.preventDefault());
